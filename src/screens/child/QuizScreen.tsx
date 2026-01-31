@@ -17,7 +17,8 @@ import { useChild } from '../../contexts/ChildContext';
 import { useTTS } from '../../hooks/useTTS';
 import { QUIZZES } from '../../data/quizzes';
 import type { LessonCategory } from '../../data/lessons';
-import { awardPerfectQuiz, saveQuizResult } from '../../services/progress';
+import { addPoints, awardPerfectQuiz, saveQuizResult } from '../../services/progress';
+import { playCorrectSound, playWrongSound } from '../../utils/audioFeedback';
 import * as Haptics from 'expo-haptics';
 
 type Route = RouteProp<ChildStackParamList, 'Quiz'>;
@@ -69,7 +70,21 @@ export function QuizScreen() {
 
   const handleNext = async () => {
     if (selected === null || !question) return;
-    const nextScore = score + 1;
+    const isCorrect = selected === question.correctIndex;
+    if (!isCorrect) {
+      const correctAnswer = question.options[question.correctIndex];
+      speak(`Not quite. The correct answer is ${correctAnswer}.`);
+      playWrongSound().catch(() => undefined);
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    }
+
+    if (isCorrect) {
+      speak('Correct.');
+      playCorrectSound().catch(() => undefined);
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+
+    const nextScore = isCorrect ? score + 1 : score;
     setScore(nextScore);
     setSelected(null);
     if (isLast) {
@@ -77,6 +92,7 @@ export function QuizScreen() {
         setSaving(true);
         const passed = nextScore === total;
         await saveQuizResult(selectedChild.id, category, nextScore, total, passed);
+        await addPoints(selectedChild.id, nextScore);
         if (passed) {
           await awardPerfectQuiz(selectedChild.id, category);
           Alert.alert('Perfect score!', 'You earned a badge and 10 points.');
@@ -126,15 +142,7 @@ export function QuizScreen() {
               style={[styles.option, selectedOption && styles.optionSelected]}
               onPress={() => {
                 speak(option);
-                if (idx === question.correctIndex) {
-                  speak('Correct.');
-                  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                  setSelected(idx);
-                } else {
-                  speak('Not quite. Try again.');
-                  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-                  setSelected(null);
-                }
+                setSelected(idx);
               }}
               accessibilityLabel={option}
               accessibilityRole="button"

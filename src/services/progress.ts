@@ -115,3 +115,9 @@ export const awardPerfectQuiz = async (childId: string, category: string) => {
   await badgeRef.set({ achievedAt: now });
   await pointsRef.transaction((current) => (Number(current || 0) + 10));
 };
+
+export const addPoints = async (childId: string, delta: number) => {
+  const db = ensureDatabase();
+  const pointsRef = db.ref(`achievements/${childId}/points`);
+  await pointsRef.transaction((current) => (Number(current || 0) + delta));
+};

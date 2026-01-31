@@ -65,6 +65,13 @@ export function ReportsScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Reports</Text>
+      <View style={styles.infoBox}>
+        <Text style={styles.infoTitle}>How scores work</Text>
+        <Text style={styles.infoText}>
+          Quiz score = number of correct answers. Points = quiz score. Perfect quiz adds +10
+          bonus points and a badge.
+        </Text>
+      </View>
       {sortedChildren.length === 0 ? (
         <Text style={styles.subtitle}>No children yet. Add a child profile first.</Text>
       ) : (
@@ -120,6 +127,24 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSizes.md,
     color: theme.colors.textSecondary,
     marginBottom: theme.spacing.sm,
+  },
+  infoBox: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: 12,
+    padding: theme.spacing.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    marginBottom: theme.spacing.lg,
+  },
+  infoTitle: {
+    fontSize: theme.fontSizes.md,
+    fontWeight: theme.fontWeights.semibold,
+    color: theme.colors.text,
+    marginBottom: theme.spacing.xs,
+  },
+  infoText: {
+    fontSize: theme.fontSizes.sm,
+    color: theme.colors.textSecondary,
   },
   card: {
     backgroundColor: theme.colors.surface,
