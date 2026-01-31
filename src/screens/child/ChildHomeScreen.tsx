@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   FlatList,
   ActivityIndicator,
+  AppState,
+  Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -29,6 +31,9 @@ export function ChildHomeScreen() {
   const [progressByCategory, setProgressByCategory] = useState<
     Record<string, Record<string, LessonProgress>>
   >({});
+  const restTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const remainingMsRef = useRef(20 * 60 * 1000);
+  const startedAtRef = useRef<number | null>(null);
 
   useScreenAnnounce(
     selectedChild
@@ -60,6 +65,47 @@ export function ChildHomeScreen() {
     );
     return () => {
       unsubscribers.forEach((unsub) => unsub());
+    };
+  }, [selectedChild?.id]);
+
+  useEffect(() => {
+    if (!selectedChild?.id) {
+      if (restTimerRef.current) clearTimeout(restTimerRef.current);
+      restTimerRef.current = null;
+      remainingMsRef.current = 20 * 60 * 1000;
+      startedAtRef.current = null;
+      return;
+    }
+
+    const startTimer = () => {
+      startedAtRef.current = Date.now();
+      if (restTimerRef.current) clearTimeout(restTimerRef.current);
+      restTimerRef.current = setTimeout(() => {
+        Alert.alert('Time to rest', 'You have been learning for 20 minutes. Take a short break.');
+        remainingMsRef.current = 20 * 60 * 1000;
+        startedAtRef.current = Date.now();
+        startTimer();
+      }, remainingMsRef.current);
+    };
+
+    startTimer();
+
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') {
+        startTimer();
+        return;
+      }
+      if (startedAtRef.current) {
+        const elapsed = Date.now() - startedAtRef.current;
+        remainingMsRef.current = Math.max(0, remainingMsRef.current - elapsed);
+      }
+      if (restTimerRef.current) clearTimeout(restTimerRef.current);
+    });
+
+    return () => {
+      subscription.remove();
+      if (restTimerRef.current) clearTimeout(restTimerRef.current);
+      restTimerRef.current = null;
     };
   }, [selectedChild?.id]);
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -20,6 +20,7 @@ import type { LessonCategory } from '../../data/lessons';
 import { addPoints, awardPerfectQuiz, saveQuizResult } from '../../services/progress';
 import { playCorrectSound, playWrongSound } from '../../utils/audioFeedback';
 import * as Haptics from 'expo-haptics';
+import { endSession, startSession } from '../../services/analytics';
 
 type Route = RouteProp<ChildStackParamList, 'Quiz'>;
 type Nav = NativeStackNavigationProp<ChildStackParamList, 'Quiz'>;
@@ -35,6 +36,8 @@ export function QuizScreen() {
   const [selected, setSelected] = useState<number | null>(null);
   const [score, setScore] = useState(0);
   const [saving, setSaving] = useState(false);
+  const sessionRef = useRef<{ sessionId: string; startedAt: number } | null>(null);
+  const endedRef = useRef(false);
 
   useScreenAnnounce('Quiz. Answer the questions.');
 
@@ -68,6 +71,30 @@ export function QuizScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index, question?.id]);
 
+  useEffect(() => {
+    const begin = async () => {
+      if (!selectedChild?.id || !category) return;
+      sessionRef.current = await startSession({
+        childId: selectedChild.id,
+        type: 'quiz',
+        category,
+      });
+    };
+    begin();
+    return () => {
+      if (endedRef.current) return;
+      const session = sessionRef.current;
+      if (session && selectedChild?.id) {
+        endSession({
+          childId: selectedChild.id,
+          sessionId: session.sessionId,
+          startedAt: session.startedAt,
+          category,
+        }).catch(() => undefined);
+      }
+    };
+  }, [selectedChild?.id, category]);
+
   const handleNext = async () => {
     if (selected === null || !question) return;
     const isCorrect = selected === question.correctIndex;
@@ -90,6 +117,15 @@ export function QuizScreen() {
     if (isLast) {
       try {
         setSaving(true);
+        if (!endedRef.current && sessionRef.current) {
+          endedRef.current = true;
+          await endSession({
+            childId: selectedChild.id,
+            sessionId: sessionRef.current.sessionId,
+            startedAt: sessionRef.current.startedAt,
+            category,
+          });
+        }
         const passed = nextScore === total;
         await saveQuizResult(selectedChild.id, category, nextScore, total, passed);
         await addPoints(selectedChild.id, nextScore);

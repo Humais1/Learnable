@@ -4,6 +4,7 @@ export type Lesson = {
   id: string;
   title: string;
   prompt: string;
+  target: string;
 };
 
 export const LESSON_CATEGORIES: { id: LessonCategory; label: string }[] = [
@@ -15,23 +16,23 @@ export const LESSON_CATEGORIES: { id: LessonCategory; label: string }[] = [
 
 export const LESSONS: Record<LessonCategory, Lesson[]> = {
   letters: [
-    { id: 'letter-a', title: 'Letter A', prompt: 'A as in Apple' },
-    { id: 'letter-b', title: 'Letter B', prompt: 'B as in Ball' },
-    { id: 'letter-c', title: 'Letter C', prompt: 'C as in Cat' },
+    { id: 'letter-a', title: 'Letter A', prompt: 'A as in Apple', target: 'A' },
+    { id: 'letter-b', title: 'Letter B', prompt: 'B as in Ball', target: 'B' },
+    { id: 'letter-c', title: 'Letter C', prompt: 'C as in Cat', target: 'C' },
   ],
   numbers: [
-    { id: 'number-1', title: 'Number 1', prompt: 'One' },
-    { id: 'number-2', title: 'Number 2', prompt: 'Two' },
-    { id: 'number-3', title: 'Number 3', prompt: 'Three' },
+    { id: 'number-1', title: 'Number 1', prompt: 'One', target: 'One' },
+    { id: 'number-2', title: 'Number 2', prompt: 'Two', target: 'Two' },
+    { id: 'number-3', title: 'Number 3', prompt: 'Three', target: 'Three' },
   ],
   birds: [
-    { id: 'bird-parrot', title: 'Parrot', prompt: 'Parrot says hello' },
-    { id: 'bird-sparrow', title: 'Sparrow', prompt: 'Small and quick' },
-    { id: 'bird-peacock', title: 'Peacock', prompt: 'Beautiful feathers' },
+    { id: 'bird-parrot', title: 'Parrot', prompt: 'Parrot says hello', target: 'Parrot' },
+    { id: 'bird-sparrow', title: 'Sparrow', prompt: 'Small and quick', target: 'Sparrow' },
+    { id: 'bird-peacock', title: 'Peacock', prompt: 'Beautiful feathers', target: 'Peacock' },
   ],
   animals: [
-    { id: 'animal-cat', title: 'Cat', prompt: 'Meow' },
-    { id: 'animal-dog', title: 'Dog', prompt: 'Woof' },
-    { id: 'animal-elephant', title: 'Elephant', prompt: 'Big and gentle' },
+    { id: 'animal-cat', title: 'Cat', prompt: 'Meow', target: 'Cat' },
+    { id: 'animal-dog', title: 'Dog', prompt: 'Woof', target: 'Dog' },
+    { id: 'animal-elephant', title: 'Elephant', prompt: 'Big and gentle', target: 'Elephant' },
   ],
 };

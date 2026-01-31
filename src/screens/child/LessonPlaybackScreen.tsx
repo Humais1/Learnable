@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
@@ -9,6 +9,9 @@ import { useScreenAnnounce } from '../../hooks/useScreenAnnounce';
 import { useChild } from '../../contexts/ChildContext';
 import { LESSONS, type LessonCategory } from '../../data/lessons';
 import { markLessonCompleted } from '../../services/progress';
+import { endSession, startSession } from '../../services/analytics';
+import { useTTS } from '../../hooks/useTTS';
+import { scorePronunciation, startRecording, stopRecording, transcribeWithGoogle } from '../../services/speech';
 
 type Route = RouteProp<ChildStackParamList, 'LessonPlayback'>;
 type Nav = NativeStackNavigationProp<ChildStackParamList, 'LessonPlayback'>;
@@ -17,19 +20,60 @@ export function LessonPlaybackScreen() {
   const route = useRoute<Route>();
   const navigation = useNavigation<Nav>();
   const { selectedChild } = useChild();
+  const { speak } = useTTS();
   const category = route.params?.category as LessonCategory;
   const lessonId = route.params?.lessonId;
   const lesson = LESSONS[category]?.find((l) => l.id === lessonId);
   const [saving, setSaving] = useState(false);
+  const [recording, setRecording] = useState<Audio.Recording | null>(null);
+  const [checking, setChecking] = useState(false);
+  const [transcript, setTranscript] = useState('');
+  const [result, setResult] = useState<'correct' | 'try_again' | null>(null);
+  const sessionRef = useRef<{ sessionId: string; startedAt: number } | null>(null);
+  const endedRef = useRef(false);
 
   useScreenAnnounce(
     lesson ? `Lesson. ${lesson.title}. ${lesson.prompt}` : 'Lesson playback.'
   );
 
+  useEffect(() => {
+    const begin = async () => {
+      if (!selectedChild?.id || !lesson) return;
+      sessionRef.current = await startSession({
+        childId: selectedChild.id,
+        type: 'lesson',
+        category,
+        lessonId: lesson.id,
+      });
+    };
+    begin();
+    return () => {
+      if (endedRef.current) return;
+      const session = sessionRef.current;
+      if (session && selectedChild?.id) {
+        endSession({
+          childId: selectedChild.id,
+          sessionId: session.sessionId,
+          startedAt: session.startedAt,
+          category,
+        }).catch(() => undefined);
+      }
+    };
+  }, [selectedChild?.id, lesson?.id, category]);
+
   const handleComplete = async () => {
     if (!selectedChild?.id || !lesson) return;
     try {
       setSaving(true);
+      if (!endedRef.current && sessionRef.current) {
+        endedRef.current = true;
+        await endSession({
+          childId: selectedChild.id,
+          sessionId: sessionRef.current.sessionId,
+          startedAt: sessionRef.current.startedAt,
+          category,
+        });
+      }
       await markLessonCompleted(selectedChild.id, category, lesson.id);
       navigation.goBack();
     } catch (e: unknown) {
@@ -37,6 +81,58 @@ export function LessonPlaybackScreen() {
       Alert.alert('Save failed', msg);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleListen = () => {
+    if (!lesson) return;
+    speak(lesson.prompt);
+  };
+
+  const handleStartPronounce = async () => {
+    if (recording) return;
+    try {
+      const rec = await startRecording();
+      setRecording(rec);
+      setResult(null);
+      setTranscript('');
+      speak('Start speaking now.');
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Recording failed.';
+      Alert.alert('Recording failed', msg);
+    }
+  };
+
+  const handleStopPronounce = async () => {
+    if (!recording || !lesson) return;
+    try {
+      setChecking(true);
+      const uri = await stopRecording(recording);
+      setRecording(null);
+      const apiKey = process.env.EXPO_PUBLIC_GOOGLE_STT_API_KEY ?? '';
+      const proxyUrl = process.env.EXPO_PUBLIC_STT_PROXY_URL ?? '';
+      if (!apiKey && !proxyUrl) {
+        Alert.alert(
+          'STT not configured',
+          'Add EXPO_PUBLIC_STT_PROXY_URL (recommended) or EXPO_PUBLIC_GOOGLE_STT_API_KEY to .env.'
+        );
+        return;
+      }
+      const text = await transcribeWithGoogle(uri, apiKey);
+      setTranscript(text);
+      const scored = scorePronunciation(lesson.target, text);
+      if (scored.matched) {
+        setResult('correct');
+        speak('Great job. That was correct.');
+      } else {
+        setResult('try_again');
+        speak(`Try again. The correct answer is ${lesson.target}.`);
+      }
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Pronunciation check failed.';
+      Alert.alert('Check failed', msg);
+    } finally {
+      setChecking(false);
     }
   };
 
@@ -61,6 +157,51 @@ export function LessonPlaybackScreen() {
       <Text style={styles.title}>Lesson</Text>
       <Text style={styles.subtitle}>{lesson.title}</Text>
       <Text style={styles.prompt}>{lesson.prompt}</Text>
+
+      <TouchableOpacity
+        style={styles.secondaryButton}
+        onPress={handleListen}
+        accessibilityLabel="Listen to the lesson"
+        accessibilityRole="button"
+      >
+        <Text style={styles.secondaryButtonText}>Listen</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.secondaryButton}
+        onPress={handleStartPronounce}
+        disabled={Boolean(recording) || checking}
+        accessibilityLabel="Start pronunciation"
+        accessibilityRole="button"
+      >
+        <Text style={styles.secondaryButtonText}>
+          {recording ? 'Recording…' : 'Start pronunciation'}
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.secondaryButton}
+        onPress={handleStopPronounce}
+        disabled={!recording || checking}
+        accessibilityLabel="Stop and check pronunciation"
+        accessibilityRole="button"
+      >
+        {checking ? (
+          <ActivityIndicator color={theme.colors.primary} />
+        ) : (
+          <Text style={styles.secondaryButtonText}>Stop & check</Text>
+        )}
+      </TouchableOpacity>
+
+      {transcript ? (
+        <Text style={styles.feedback}>You said: {transcript}</Text>
+      ) : null}
+      {result === 'correct' ? (
+        <Text style={styles.feedbackSuccess}>Correct pronunciation</Text>
+      ) : null}
+      {result === 'try_again' ? (
+        <Text style={styles.feedbackWarn}>Try again</Text>
+      ) : null}
 
       <TouchableOpacity
         style={styles.primaryButton}
@@ -116,5 +257,36 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSizes.md,
     fontWeight: theme.fontWeights.semibold,
     color: theme.colors.onPrimary,
+  },
+  secondaryButton: {
+    borderRadius: 12,
+    padding: theme.spacing.md,
+    minHeight: theme.spacing.minTouchTarget,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: theme.spacing.sm,
+    borderWidth: 1,
+    borderColor: theme.colors.borderLight,
+  },
+  secondaryButtonText: {
+    fontSize: theme.fontSizes.md,
+    color: theme.colors.textSecondary,
+  },
+  feedback: {
+    marginTop: theme.spacing.md,
+    fontSize: theme.fontSizes.sm,
+    color: theme.colors.textSecondary,
+  },
+  feedbackSuccess: {
+    marginTop: theme.spacing.xs,
+    fontSize: theme.fontSizes.sm,
+    color: theme.colors.success,
+    fontWeight: theme.fontWeights.semibold,
+  },
+  feedbackWarn: {
+    marginTop: theme.spacing.xs,
+    fontSize: theme.fontSizes.sm,
+    color: theme.colors.warning,
+    fontWeight: theme.fontWeights.semibold,
   },
 });
