@@ -84,6 +84,15 @@ export function LessonListScreen() {
           <Text style={styles.helpText}>{error}</Text>
         </View>
       ) : (
+        <>
+          <TouchableOpacity
+            style={styles.quizButton}
+            onPress={() => navigation.navigate('Quiz', { category })}
+            accessibilityLabel="Start quiz"
+            accessibilityRole="button"
+          >
+            <Text style={styles.quizButtonText}>Start quiz</Text>
+          </TouchableOpacity>
         <FlatList
           data={lessons}
           keyExtractor={(item) => item.id}
@@ -113,6 +122,7 @@ export function LessonListScreen() {
             );
           }}
         />
+        </>
       )}
     </View>
   );
@@ -186,6 +196,20 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     color: theme.colors.primary,
+    fontSize: theme.fontSizes.md,
+    fontWeight: theme.fontWeights.semibold,
+  },
+  quizButton: {
+    backgroundColor: theme.colors.primary,
+    borderRadius: 12,
+    padding: theme.spacing.md,
+    minHeight: theme.spacing.minTouchTarget,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: theme.spacing.md,
+  },
+  quizButtonText: {
+    color: theme.colors.onPrimary,
     fontSize: theme.fontSizes.md,
     fontWeight: theme.fontWeights.semibold,
   },
