@@ -1,0 +1,40 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+// Apply legacy Expo autolinking so rootProject.ext has addExpoModulesDependencies etc. (gradle.ext.expoAutolinkingManager is set from settings.gradle)
+apply from: file("../node_modules/expo-modules-autolinking/scripts/android/autolinking_implementation.gradle")
+
+// Ensure Expo modules get compileSdk etc. when they configure (expo-root-project sets these via catalog; set ext early)
+ext.compileSdkVersion = 34
+ext.buildToolsVersion = "34.0.0"
+ext.minSdkVersion = 21
+ext.targetSdkVersion = 34
+
+buildscript {
+  repositories {
+    google()
+    mavenCentral()
+  }
+  dependencies {
+    classpath('com.android.tools.build:gradle')
+    classpath('com.facebook.react:react-native-gradle-plugin')
+    classpath('org.jetbrains.kotlin:kotlin-gradle-plugin')
+  }
+}
+
+allprojects {
+  repositories {
+    google()
+    mavenCentral()
+    maven { url 'https://www.jitpack.io' }
+  }
+}
+
+apply plugin: "expo-root-project"
+apply plugin: "com.facebook.react.rootproject"
+
+// Ensure all subprojects (e.g. expo-dev-launcher) use the same Kotlin version for compiler plugins; otherwise they resolve 1.8.0 from RN and artifacts are missing
+allprojects { sub ->
+  if (!sub.ext.has("kotlinVersion")) {
+    sub.ext.set("kotlinVersion", rootProject.ext.has("kotlinVersion") ? rootProject.ext.get("kotlinVersion") : "2.0.21")
+  }
+}

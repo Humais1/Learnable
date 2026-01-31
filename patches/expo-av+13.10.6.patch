@@ -1,0 +1,11 @@
+diff --git a/node_modules/expo-av/android/build.gradle b/node_modules/expo-av/android/build.gradle
+--- a/node_modules/expo-av/android/build.gradle
++++ b/node_modules/expo-av/android/build.gradle
+@@ -22,6 +22,7 @@ if (expoModulesCorePlugin.exists()) {
+   applyKotlinExpoModulesCorePlugin()
+   // Remove this check, but keep the contents after SDK49 support is dropped
+   if (safeExtGet("expoProvidesDefaultConfig", false)) {
++    useDefaultAndroidSdkVersions()
+     useExpoPublishing()
+     useCoreDependencies()
+   }

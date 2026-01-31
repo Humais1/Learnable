@@ -1,0 +1,40 @@
+pluginManagement {
+  def reactNativeGradlePlugin = new File(
+    providers.exec {
+      workingDir(rootDir)
+      commandLine("node", "--print", "require.resolve('@react-native/gradle-plugin/package.json', { paths: [require.resolve('react-native/package.json')] })")
+    }.standardOutput.asText.get().trim()
+  ).getParentFile().absolutePath
+  includeBuild(reactNativeGradlePlugin)
+
+  def expoPluginsPath = new File(
+    providers.exec {
+      workingDir(rootDir)
+      commandLine("node", "--print", "require.resolve('expo-modules-autolinking/package.json', { paths: [require.resolve('expo/package.json')] })")
+    }.standardOutput.asText.get().trim(),
+    "../android/expo-gradle-plugin"
+  ).absolutePath
+  includeBuild(expoPluginsPath)
+}
+
+// RN 0.73 does not have com.facebook.react.settings; use expo-autolinking-settings only
+plugins {
+  id("expo-autolinking-settings")
+}
+
+expoAutolinking.useExpoModules()
+
+rootProject.name = 'LearnAble'
+
+expoAutolinking.useExpoVersionCatalog()
+
+// Legacy autolinking script: sets gradle.ext.expoAutolinkingManager for modules that expect it (e.g. expo package when using legacy path)
+apply from: file("../node_modules/expo-modules-autolinking/scripts/android/autolinking_implementation.gradle")
+ext.useExpoModules([:])
+
+// Include React Native community native modules (e.g. react-native-safe-area-context, react-native-screens)
+apply from: file("../node_modules/@react-native-community/cli-platform-android/native_modules.gradle")
+applyNativeModulesSettingsGradle(settings)
+
+include ':app'
+includeBuild(expoAutolinking.reactNativeGradlePlugin)
