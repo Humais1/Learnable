@@ -194,10 +194,12 @@ export function QuizScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Quiz</Text>
-      <Text style={styles.subtitle}>
-        Question {index + 1} of {total}
-      </Text>
+      <View style={styles.headerCard}>
+        <Text style={styles.title}>Quiz</Text>
+        <Text style={styles.subtitle}>
+          Question {index + 1} of {total}
+        </Text>
+      </View>
 
       <View style={styles.card}>
         <Text style={styles.prompt}>{question.prompt}</Text>
@@ -264,6 +266,19 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
     padding: theme.spacing.xl,
   },
+  headerCard: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: 16,
+    padding: theme.spacing.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    marginBottom: theme.spacing.lg,
+    shadowColor: theme.colors.text,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
+    elevation: 3,
+  },
   title: {
     fontSize: theme.fontSizes.xxl,
     fontWeight: theme.fontWeights.bold,
@@ -273,7 +288,6 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: theme.fontSizes.md,
     color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.lg,
   },
   card: {
     backgroundColor: theme.colors.surface,
@@ -282,6 +296,11 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.lg,
     borderWidth: 1,
     borderColor: theme.colors.border,
+    shadowColor: theme.colors.text,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.04,
+    shadowRadius: 12,
+    elevation: 2,
   },
   prompt: {
     fontSize: theme.fontSizes.md,

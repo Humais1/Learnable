@@ -33,6 +33,10 @@ export function DashboardScreen() {
       { phrases: ['open reports', 'reports'], action: () => navigation.navigate('Reports') },
       { phrases: ['open settings', 'settings'], action: () => navigation.navigate('Settings') },
       {
+        phrases: ['open leaderboard', 'leaderboard'],
+        action: () => navigation.navigate('ParentLeaderboard'),
+      },
+      {
         phrases: ['manage children', 'child profiles', 'children'],
         action: () => navigation.navigate('ChildProfiles'),
       },
@@ -130,6 +134,18 @@ export function DashboardScreen() {
       .slice(0, 3);
   }, [children, achievements]);
 
+  const rankedChildren = useMemo(() => {
+    return [...children]
+      .map((child) => ({
+        ...child,
+        points: achievements[child.id]?.points ?? 0,
+      }))
+      .sort((a, b) => b.points - a.points)
+      .slice(0, 5);
+  }, [children, achievements]);
+
+  const maxPoints = rankedChildren[0]?.points ?? 1;
+
   const recentQuizzes = useMemo(() => {
     const items: Array<{
       childId: string;
@@ -193,6 +209,14 @@ export function DashboardScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.secondaryButton}
+            onPress={() => navigation.navigate('ParentLeaderboard')}
+            accessibilityLabel="Open leaderboard"
+            accessibilityRole="button"
+          >
+            <Text style={styles.secondaryButtonText}>Leaderboard</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.secondaryButton}
             onPress={() => navigation.navigate('Settings')}
             accessibilityLabel="Open settings"
             accessibilityRole="button"
@@ -237,6 +261,27 @@ export function DashboardScreen() {
         ))
       )}
 
+      <Text style={styles.sectionTitle}>Leaderboard</Text>
+      {rankedChildren.length === 0 ? (
+        <Text style={styles.emptyText}>No learners yet.</Text>
+      ) : (
+        rankedChildren.map((child, index) => {
+          const widthPct = Math.max(8, Math.round((child.points / maxPoints) * 100));
+          return (
+            <View key={child.id} style={styles.barRow}>
+              <View style={styles.barHeader}>
+                <Text style={styles.barRank}>#{index + 1}</Text>
+                <Text style={styles.barName}>{child.name}</Text>
+                <Text style={styles.barPoints}>{child.points} pts</Text>
+              </View>
+              <View style={styles.barTrack}>
+                <View style={[styles.barFill, { width: `${widthPct}%` }]} />
+              </View>
+            </View>
+          );
+        })
+      )}
+
       <Text style={styles.sectionTitle}>Recent quizzes</Text>
       {recentQuizzes.length === 0 ? (
         <Text style={styles.emptyText}>No quiz results yet.</Text>
@@ -261,7 +306,7 @@ export function DashboardScreen() {
         processing={voice.processing}
         lastTranscript={voice.lastTranscript}
         onToggle={voice.toggleListening}
-        hint="Try: open reports, settings, manage children, go back."
+        hint="Try: open reports, leaderboard, settings, manage children, go back."
       />
     </ScrollView>
   );
@@ -418,6 +463,51 @@ const styles = StyleSheet.create({
   listMeta: {
     fontSize: theme.fontSizes.sm,
     color: theme.colors.textSecondary,
+  },
+  barRow: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: 12,
+    padding: theme.spacing.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    marginBottom: theme.spacing.sm,
+    shadowColor: theme.colors.text,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.04,
+    shadowRadius: 12,
+    elevation: 2,
+  },
+  barHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: theme.spacing.sm,
+  },
+  barRank: {
+    width: 36,
+    fontSize: theme.fontSizes.sm,
+    fontWeight: theme.fontWeights.semibold,
+    color: theme.colors.primary,
+  },
+  barName: {
+    flex: 1,
+    fontSize: theme.fontSizes.md,
+    color: theme.colors.text,
+    fontWeight: theme.fontWeights.semibold,
+  },
+  barPoints: {
+    fontSize: theme.fontSizes.sm,
+    color: theme.colors.textSecondary,
+  },
+  barTrack: {
+    height: 10,
+    backgroundColor: theme.colors.border,
+    borderRadius: 999,
+    overflow: 'hidden',
+  },
+  barFill: {
+    height: '100%',
+    backgroundColor: theme.colors.primary,
+    borderRadius: 999,
   },
   listBadge: {
     backgroundColor: theme.colors.primary,

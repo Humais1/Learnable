@@ -49,9 +49,11 @@ export function BadgesScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Badges</Text>
-      <Text style={styles.subtitle}>Hi {selectedChild.name}</Text>
-      <Text style={styles.points}>Points: {points}</Text>
+      <View style={styles.heroCard}>
+        <Text style={styles.title}>Badges</Text>
+        <Text style={styles.subtitle}>Hi {selectedChild.name}</Text>
+        <Text style={styles.points}>{points} total points</Text>
+      </View>
 
       {perfectBadges.length === 0 ? (
         <Text style={styles.subtitle}>No badges yet. Complete a perfect quiz.</Text>
@@ -59,7 +61,10 @@ export function BadgesScreen() {
         <View style={styles.badgeList}>
           {perfectBadges.map((category) => (
             <View key={category} style={styles.badgeCard}>
-              <Text style={styles.badgeTitle}>Perfect {category} quiz</Text>
+              <View style={styles.badgeHeader}>
+                <Text style={styles.badgeTitle}>Perfect {category} quiz</Text>
+                <Text style={styles.badgePill}>Badge</Text>
+              </View>
               <Text style={styles.badgeSubtitle}>All answers correct</Text>
             </View>
           ))}
@@ -74,6 +79,19 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background,
     padding: theme.spacing.xl,
+  },
+  heroCard: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: 16,
+    padding: theme.spacing.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    marginBottom: theme.spacing.lg,
+    shadowColor: theme.colors.text,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
+    elevation: 3,
   },
   title: {
     fontSize: theme.fontSizes.xxl,
@@ -102,6 +120,26 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border,
     marginBottom: theme.spacing.md,
+    shadowColor: theme.colors.text,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.04,
+    shadowRadius: 12,
+    elevation: 2,
+  },
+  badgeHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: theme.spacing.xs,
+  },
+  badgePill: {
+    backgroundColor: theme.colors.primary,
+    color: theme.colors.onPrimary,
+    fontSize: theme.fontSizes.xs,
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+    borderRadius: 999,
+    overflow: 'hidden',
   },
   badgeTitle: {
     fontSize: theme.fontSizes.lg,

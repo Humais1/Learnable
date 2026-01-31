@@ -106,10 +106,20 @@ export function LessonListScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Lessons</Text>
-      <Text style={styles.subtitle}>
-        {selectedChild.name} • {category}
-      </Text>
+      <View style={styles.headerCard}>
+        <Text style={styles.title}>Lessons</Text>
+        <Text style={styles.subtitle}>
+          {selectedChild.name} • {category}
+        </Text>
+        <TouchableOpacity
+          style={styles.quizButton}
+          onPress={() => navigation.navigate('Quiz', { category })}
+          accessibilityLabel="Start quiz"
+          accessibilityRole="button"
+        >
+          <Text style={styles.quizButtonText}>Start quiz</Text>
+        </TouchableOpacity>
+      </View>
 
       {loading ? (
         <ActivityIndicator color={theme.colors.primary} />
@@ -120,14 +130,6 @@ export function LessonListScreen() {
         </View>
       ) : (
         <>
-          <TouchableOpacity
-            style={styles.quizButton}
-            onPress={() => navigation.navigate('Quiz', { category })}
-            accessibilityLabel="Start quiz"
-            accessibilityRole="button"
-          >
-            <Text style={styles.quizButtonText}>Start quiz</Text>
-          </TouchableOpacity>
         <FlatList
           data={lessons}
           keyExtractor={(item) => item.id}
@@ -178,6 +180,19 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
     padding: theme.spacing.xl,
   },
+  headerCard: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: 16,
+    padding: theme.spacing.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    marginBottom: theme.spacing.lg,
+    shadowColor: theme.colors.text,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
+    elevation: 3,
+  },
   title: {
     fontSize: theme.fontSizes.xxl,
     fontWeight: theme.fontWeights.bold,
@@ -187,7 +202,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: theme.fontSizes.md,
     color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.lg,
+    marginBottom: theme.spacing.md,
   },
   errorBox: {
     backgroundColor: theme.colors.surface,
@@ -211,6 +226,11 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md,
     borderWidth: 1,
     borderColor: theme.colors.border,
+    shadowColor: theme.colors.text,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.04,
+    shadowRadius: 12,
+    elevation: 2,
   },
   lessonTitle: {
     fontSize: theme.fontSizes.lg,
@@ -250,7 +270,7 @@ const styles = StyleSheet.create({
     minHeight: theme.spacing.minTouchTarget,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: theme.spacing.md,
+    marginTop: theme.spacing.sm,
   },
   quizButtonText: {
     color: theme.colors.onPrimary,

@@ -198,68 +198,70 @@ export function LessonPlaybackScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Lesson</Text>
-      <Text style={styles.subtitle}>{lesson.title}</Text>
-      <Text style={styles.prompt}>{lesson.prompt}</Text>
+      <View style={styles.card}>
+        <Text style={styles.title}>Lesson</Text>
+        <Text style={styles.subtitle}>{lesson.title}</Text>
+        <Text style={styles.prompt}>{lesson.prompt}</Text>
 
-      <TouchableOpacity
-        style={styles.secondaryButton}
-        onPress={handleListen}
-        accessibilityLabel="Listen to the lesson"
-        accessibilityRole="button"
-      >
-        <Text style={styles.secondaryButtonText}>Listen</Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.secondaryButton}
+          onPress={handleListen}
+          accessibilityLabel="Listen to the lesson"
+          accessibilityRole="button"
+        >
+          <Text style={styles.secondaryButtonText}>Listen</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity
-        style={styles.secondaryButton}
-        onPress={handleStartPronounce}
-        disabled={Boolean(recording) || checking || starting}
-        accessibilityLabel="Start pronunciation"
-        accessibilityRole="button"
-      >
-        <Text style={styles.secondaryButtonText}>
-          {recording ? 'Recording…' : starting ? 'Preparing…' : 'Start pronunciation'}
-        </Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.secondaryButton}
+          onPress={handleStartPronounce}
+          disabled={Boolean(recording) || checking || starting}
+          accessibilityLabel="Start pronunciation"
+          accessibilityRole="button"
+        >
+          <Text style={styles.secondaryButtonText}>
+            {recording ? 'Recording…' : starting ? 'Preparing…' : 'Start pronunciation'}
+          </Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity
-        style={styles.secondaryButton}
-        onPress={handleStopPronounce}
-        disabled={!recording || checking || starting}
-        accessibilityLabel="Stop and check pronunciation"
-        accessibilityRole="button"
-      >
-        {checking ? (
-          <ActivityIndicator color={theme.colors.primary} />
-        ) : (
-          <Text style={styles.secondaryButtonText}>Stop & check</Text>
-        )}
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.secondaryButton}
+          onPress={handleStopPronounce}
+          disabled={!recording || checking || starting}
+          accessibilityLabel="Stop and check pronunciation"
+          accessibilityRole="button"
+        >
+          {checking ? (
+            <ActivityIndicator color={theme.colors.primary} />
+          ) : (
+            <Text style={styles.secondaryButtonText}>Stop & check</Text>
+          )}
+        </TouchableOpacity>
 
-      {transcript ? (
-        <Text style={styles.feedback}>You said: {transcript}</Text>
-      ) : null}
-      {result === 'correct' ? (
-        <Text style={styles.feedbackSuccess}>Correct pronunciation</Text>
-      ) : null}
-      {result === 'try_again' ? (
-        <Text style={styles.feedbackWarn}>Try again</Text>
-      ) : null}
+        {transcript ? (
+          <Text style={styles.feedback}>You said: {transcript}</Text>
+        ) : null}
+        {result === 'correct' ? (
+          <Text style={styles.feedbackSuccess}>Correct pronunciation</Text>
+        ) : null}
+        {result === 'try_again' ? (
+          <Text style={styles.feedbackWarn}>Try again</Text>
+        ) : null}
 
-      <TouchableOpacity
-        style={styles.primaryButton}
-        onPress={handleComplete}
-        disabled={saving}
-        accessibilityLabel="Mark completed"
-        accessibilityRole="button"
-      >
-        {saving ? (
-          <ActivityIndicator color={theme.colors.onPrimary} />
-        ) : (
-          <Text style={styles.primaryButtonText}>Mark completed</Text>
-        )}
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.primaryButton}
+          onPress={handleComplete}
+          disabled={saving}
+          accessibilityLabel="Mark completed"
+          accessibilityRole="button"
+        >
+          {saving ? (
+            <ActivityIndicator color={theme.colors.onPrimary} />
+          ) : (
+            <Text style={styles.primaryButtonText}>Mark completed</Text>
+          )}
+        </TouchableOpacity>
+      </View>
 
       <VoiceControlBar
         listening={voice.listening}
@@ -277,9 +279,19 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
-    justifyContent: 'center',
-    alignItems: 'center',
     padding: theme.spacing.xl,
+  },
+  card: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: 16,
+    padding: theme.spacing.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    shadowColor: theme.colors.text,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
+    elevation: 3,
   },
   title: {
     fontSize: theme.fontSizes.xxl,

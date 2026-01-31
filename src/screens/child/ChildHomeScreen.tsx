@@ -72,6 +72,10 @@ export function ChildHomeScreen() {
                 'You can say: open letters, open numbers, open birds, open animals, change child, or go back.'
               ),
           },
+          {
+            phrases: ['open assistant', 'voice assistant', 'assistant'],
+            action: () => navigation.navigate('VoiceAssistant'),
+          },
         ]
       : [
           ...childSelectCommands,
@@ -202,19 +206,49 @@ export function ChildHomeScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.title}>Learn</Text>
-          <Text style={styles.subtitle}>Hi {selectedChild.name}</Text>
+      <View style={styles.heroCard}>
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.title}>Learn</Text>
+            <Text style={styles.subtitle}>Hi {selectedChild.name}</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.changeButton}
+            onPress={() => clearChild()}
+            accessibilityLabel="Change child"
+            accessibilityRole="button"
+          >
+            <Text style={styles.changeButtonText}>Change</Text>
+          </TouchableOpacity>
         </View>
+
         <TouchableOpacity
-          style={styles.changeButton}
-          onPress={() => clearChild()}
-          accessibilityLabel="Change child"
+          style={styles.assistantButton}
+          onPress={() => navigation.navigate('VoiceAssistant')}
+          accessibilityLabel="Open voice assistant"
           accessibilityRole="button"
         >
-          <Text style={styles.changeButtonText}>Change</Text>
+          <Text style={styles.assistantText}>Voice assistant</Text>
         </TouchableOpacity>
+
+        <View style={styles.quickRow}>
+          <TouchableOpacity
+            style={styles.quickButton}
+            onPress={() => navigation.navigate('Badges')}
+            accessibilityLabel="Open badges"
+            accessibilityRole="button"
+          >
+            <Text style={styles.quickText}>Badges</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.quickButton, styles.quickButtonLast]}
+            onPress={() => navigation.navigate('Leaderboard')}
+            accessibilityLabel="Open leaderboard"
+            accessibilityRole="button"
+          >
+            <Text style={styles.quickText}>Leaderboard</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {LESSON_CATEGORIES.map((category) => (
@@ -239,9 +273,21 @@ export function ChildHomeScreen() {
         >
           <View style={styles.categoryRow}>
             <Text style={styles.categoryText}>{category.label}</Text>
-            <Text style={[styles.categoryProgress, isCompleted && styles.categoryProgressDone]}>
-              {progressLabel}
-            </Text>
+            <View
+              style={[
+                styles.categoryPill,
+                isCompleted ? styles.categoryPillDone : styles.categoryPillIdle,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.categoryProgress,
+                  isCompleted && styles.categoryProgressDone,
+                ]}
+              >
+                {progressLabel}
+              </Text>
+            </View>
           </View>
         </TouchableOpacity>
           );
@@ -265,11 +311,24 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
     padding: theme.spacing.xl,
   },
+  heroCard: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: 16,
+    padding: theme.spacing.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    marginBottom: theme.spacing.lg,
+    shadowColor: theme.colors.text,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
+    elevation: 3,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: theme.spacing.lg,
+    marginBottom: theme.spacing.md,
   },
   title: {
     fontSize: theme.fontSizes.xxl,
@@ -320,6 +379,46 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md,
     borderWidth: 1,
     borderColor: theme.colors.border,
+    shadowColor: theme.colors.text,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.04,
+    shadowRadius: 12,
+    elevation: 2,
+  },
+  assistantButton: {
+    backgroundColor: theme.colors.surfaceElevated,
+    borderRadius: 12,
+    padding: theme.spacing.md,
+    marginBottom: theme.spacing.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  assistantText: {
+    color: theme.colors.primary,
+    fontSize: theme.fontSizes.md,
+    fontWeight: theme.fontWeights.semibold,
+  },
+  quickRow: {
+    flexDirection: 'row',
+    marginTop: theme.spacing.sm,
+  },
+  quickButton: {
+    flex: 1,
+    backgroundColor: theme.colors.surface,
+    borderRadius: 12,
+    padding: theme.spacing.sm,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    marginRight: theme.spacing.sm,
+    alignItems: 'center',
+  },
+  quickButtonLast: {
+    marginRight: 0,
+  },
+  quickText: {
+    color: theme.colors.text,
+    fontSize: theme.fontSizes.sm,
+    fontWeight: theme.fontWeights.semibold,
   },
   categoryRow: {
     flexDirection: 'row',
@@ -338,5 +437,19 @@ const styles = StyleSheet.create({
   categoryProgressDone: {
     color: theme.colors.success,
     fontWeight: theme.fontWeights.semibold,
+  },
+  categoryPill: {
+    borderRadius: 999,
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+    borderWidth: 1,
+  },
+  categoryPillIdle: {
+    borderColor: theme.colors.borderLight,
+    backgroundColor: theme.colors.surface,
+  },
+  categoryPillDone: {
+    borderColor: theme.colors.success,
+    backgroundColor: theme.colors.surface,
   },
 });

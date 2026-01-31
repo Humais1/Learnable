@@ -25,6 +25,7 @@ export type ParentStackParamList = {
   Reports: undefined;
   Dashboard: undefined;
   Settings: undefined;
+  ParentLeaderboard: undefined;
 };
 
 export type ChildStackParamList = {
@@ -34,6 +35,7 @@ export type ChildStackParamList = {
   Quiz: { category: string };
   Badges: undefined;
   Leaderboard: undefined;
+  VoiceAssistant: undefined;
 };
 
 export type RootStackScreenProps<T extends keyof RootStackParamList> =

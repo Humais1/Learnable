@@ -50,45 +50,49 @@ export function ForgotPasswordScreen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <Text style={styles.title}>Reset password</Text>
-      <Text style={styles.subtitle}>
-        Enter your email and we'll send a link to reset your password.
-      </Text>
+      <View style={styles.header}>
+        <Text style={styles.title}>Reset password</Text>
+        <Text style={styles.subtitle}>
+          Enter your email and we'll send a link to reset your password.
+        </Text>
+      </View>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        placeholderTextColor={theme.colors.textMuted}
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
-        editable={!loading && !sent}
-        accessibilityLabel="Email"
-      />
+      <View style={styles.card}>
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          placeholderTextColor={theme.colors.textMuted}
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
+          editable={!loading && !sent}
+          accessibilityLabel="Email"
+        />
 
-      <TouchableOpacity
-        style={[styles.button, (loading || sent) && styles.buttonDisabled]}
-        onPress={handleReset}
-        disabled={loading || sent}
-        accessibilityLabel="Send reset link"
-        accessibilityRole="button"
-      >
-        {loading ? (
-          <ActivityIndicator color={theme.colors.onPrimary} />
-        ) : (
-          <Text style={styles.buttonText}>{sent ? 'Email sent' : 'Send reset link'}</Text>
-        )}
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.button, (loading || sent) && styles.buttonDisabled]}
+          onPress={handleReset}
+          disabled={loading || sent}
+          accessibilityLabel="Send reset link"
+          accessibilityRole="button"
+        >
+          {loading ? (
+            <ActivityIndicator color={theme.colors.onPrimary} />
+          ) : (
+            <Text style={styles.buttonText}>{sent ? 'Email sent' : 'Send reset link'}</Text>
+          )}
+        </TouchableOpacity>
 
-      <TouchableOpacity
-        style={styles.linkButton}
-        onPress={() => navigation.navigate('Login')}
-        accessibilityLabel="Back to login"
-        accessibilityRole="button"
-      >
-        <Text style={styles.linkText}>Back to login</Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.linkButton}
+          onPress={() => navigation.navigate('Login')}
+          accessibilityLabel="Back to login"
+          accessibilityRole="button"
+        >
+          <Text style={styles.linkText}>Back to login</Text>
+        </TouchableOpacity>
+      </View>
     </KeyboardAvoidingView>
   );
 }
@@ -100,6 +104,9 @@ const styles = StyleSheet.create({
     padding: theme.spacing.xl,
     justifyContent: 'center',
   },
+  header: {
+    marginBottom: theme.spacing.lg,
+  },
   title: {
     fontSize: theme.fontSizes.xxl,
     fontWeight: theme.fontWeights.bold,
@@ -109,7 +116,18 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: theme.fontSizes.md,
     color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.xl,
+  },
+  card: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: 16,
+    padding: theme.spacing.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    shadowColor: theme.colors.text,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
+    elevation: 3,
   },
   input: {
     backgroundColor: theme.colors.surface,
@@ -119,6 +137,8 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
     marginBottom: theme.spacing.md,
     minHeight: MIN_TOUCH,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
   },
   button: {
     backgroundColor: theme.colors.primary,

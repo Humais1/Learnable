@@ -1,16 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
 import { theme } from '../../theme';
-import { useScreenAnnounce } from '../../hooks/useScreenAnnounce';
 import { useAuth } from '../../contexts/AuthContext';
-import { useChild } from '../../contexts/ChildContext';
 import { subscribeToChildren, type ChildProfile } from '../../services/children';
 import { subscribeToAchievements, type AchievementsSnapshot } from '../../services/progress';
 
-export function LeaderboardScreen() {
-  useScreenAnnounce('Leaderboard. See your rank this week.');
+export function ParentLeaderboardScreen() {
   const { user } = useAuth();
-  const { selectedChild } = useChild();
   const [children, setChildren] = useState<ChildProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [achievements, setAchievements] = useState<Record<string, AchievementsSnapshot>>({});
@@ -49,6 +45,8 @@ export function LeaderboardScreen() {
       .sort((a, b) => b.points - a.points);
   }, [children, achievements]);
 
+  const maxPoints = ranked[0]?.points ?? 1;
+
   if (loading) {
     return (
       <View style={styles.container}>
@@ -56,38 +54,32 @@ export function LeaderboardScreen() {
       </View>
     );
   }
+
   return (
-    <View style={styles.container}>
-      <View style={styles.heroCard}>
-        <Text style={styles.title}>Leaderboard</Text>
-        <Text style={styles.subtitle}>Top learners this week</Text>
-      </View>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <Text style={styles.title}>Leaderboard</Text>
+      <Text style={styles.subtitle}>Track your children’s points over time</Text>
+
       {ranked.length === 0 ? (
-        <Text style={styles.subtitle}>No learners yet.</Text>
+        <Text style={styles.emptyText}>No learners yet.</Text>
       ) : (
-        ranked.map((child, idx) => (
-          <View
-            key={child.id}
-            style={[
-              styles.row,
-              selectedChild?.id === child.id && styles.rowSelected,
-              idx === 0 && styles.rowGold,
-              idx === 1 && styles.rowSilver,
-              idx === 2 && styles.rowBronze,
-            ]}
-          >
-            <Text style={styles.rank}>#{idx + 1}</Text>
-            <View style={styles.rowBody}>
-              <Text style={styles.name}>{child.name}</Text>
-              <Text style={styles.points}>{child.points} points</Text>
+        ranked.map((child, idx) => {
+          const widthPct = Math.max(6, Math.round((child.points / maxPoints) * 100));
+          return (
+            <View key={child.id} style={styles.row}>
+              <View style={styles.rowHeader}>
+                <Text style={styles.rank}>#{idx + 1}</Text>
+                <Text style={styles.name}>{child.name}</Text>
+                <Text style={styles.points}>{child.points} pts</Text>
+              </View>
+              <View style={styles.barTrack}>
+                <View style={[styles.barFill, { width: `${widthPct}%` }]} />
+              </View>
             </View>
-            <Text style={styles.rankBadge}>
-              {idx === 0 ? 'Gold' : idx === 1 ? 'Silver' : idx === 2 ? 'Bronze' : ''}
-            </Text>
-          </View>
-        ))
+          );
+        })
       )}
-    </View>
+    </ScrollView>
   );
 }
 
@@ -95,68 +87,51 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
-    padding: theme.spacing.xl,
   },
-  heroCard: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: 16,
-    padding: theme.spacing.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    marginBottom: theme.spacing.lg,
-    shadowColor: theme.colors.text,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.06,
-    shadowRadius: 16,
-    elevation: 3,
+  content: {
+    padding: theme.spacing.xl,
   },
   title: {
     fontSize: theme.fontSizes.xxl,
     fontWeight: theme.fontWeights.bold,
     color: theme.colors.text,
-    marginBottom: theme.spacing.sm,
+    marginBottom: theme.spacing.xs,
   },
   subtitle: {
     fontSize: theme.fontSizes.md,
     color: theme.colors.textSecondary,
+    marginBottom: theme.spacing.lg,
+  },
+  emptyText: {
+    fontSize: theme.fontSizes.sm,
+    color: theme.colors.textSecondary,
   },
   row: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: theme.colors.surface,
-    borderRadius: 12,
-    padding: theme.spacing.md,
-    marginBottom: theme.spacing.md,
+    borderRadius: 16,
+    padding: theme.spacing.lg,
     borderWidth: 1,
     borderColor: theme.colors.border,
+    marginBottom: theme.spacing.md,
     shadowColor: theme.colors.text,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.04,
     shadowRadius: 12,
     elevation: 2,
   },
-  rowSelected: {
-    borderColor: theme.colors.primary,
-  },
-  rowGold: {
-    borderColor: '#FFD166',
-  },
-  rowSilver: {
-    borderColor: '#C0C0C0',
-  },
-  rowBronze: {
-    borderColor: '#CD7F32',
+  rowHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: theme.spacing.sm,
   },
   rank: {
-    fontSize: theme.fontSizes.lg,
-    fontWeight: theme.fontWeights.bold,
+    fontSize: theme.fontSizes.sm,
+    fontWeight: theme.fontWeights.semibold,
     color: theme.colors.primary,
-    width: 48,
-  },
-  rowBody: {
-    flex: 1,
+    width: 36,
   },
   name: {
+    flex: 1,
     fontSize: theme.fontSizes.md,
     color: theme.colors.text,
     fontWeight: theme.fontWeights.semibold,
@@ -165,11 +140,15 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSizes.sm,
     color: theme.colors.textSecondary,
   },
-  rankBadge: {
-    fontSize: theme.fontSizes.xs,
-    color: theme.colors.textSecondary,
-    fontWeight: theme.fontWeights.semibold,
-    minWidth: 54,
-    textAlign: 'right',
+  barTrack: {
+    height: 10,
+    backgroundColor: theme.colors.border,
+    borderRadius: 999,
+    overflow: 'hidden',
+  },
+  barFill: {
+    height: '100%',
+    backgroundColor: theme.colors.primary,
+    borderRadius: 999,
   },
 });

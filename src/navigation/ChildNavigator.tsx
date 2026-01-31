@@ -7,6 +7,7 @@ import { LessonPlaybackScreen } from '../screens/child/LessonPlaybackScreen';
 import { QuizScreen } from '../screens/child/QuizScreen';
 import { BadgesScreen } from '../screens/child/BadgesScreen';
 import { LeaderboardScreen } from '../screens/child/LeaderboardScreen';
+import { VoiceAssistantScreen } from '../screens/child/VoiceAssistantScreen';
 
 const Stack = createNativeStackNavigator<ChildStackParamList>();
 
@@ -24,6 +25,7 @@ export function ChildNavigator() {
       <Stack.Screen name="Quiz" component={QuizScreen} />
       <Stack.Screen name="Badges" component={BadgesScreen} />
       <Stack.Screen name="Leaderboard" component={LeaderboardScreen} />
+      <Stack.Screen name="VoiceAssistant" component={VoiceAssistantScreen} />
     </Stack.Navigator>
   );
 }
