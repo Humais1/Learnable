@@ -1,5 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  ScrollView,
+  TouchableOpacity,
+} from 'react-native';
 import { theme } from '../../theme';
 import { useScreenAnnounce } from '../../hooks/useScreenAnnounce';
 import { useAuth } from '../../contexts/AuthContext';
@@ -20,6 +27,7 @@ export function ReportsScreen() {
   const [quizResults, setQuizResults] = useState<Record<string, QuizResultsMap>>({});
   const [achievements, setAchievements] = useState<Record<string, AchievementsSnapshot>>({});
   const [analytics, setAnalytics] = useState<Record<string, Record<string, DailyAnalytics>>>({});
+  const [expandedById, setExpandedById] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (!user?.uid) {
@@ -89,7 +97,7 @@ export function ReportsScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.title}>Reports</Text>
       <View style={styles.infoBox}>
         <Text style={styles.infoTitle}>How scores work</Text>
@@ -110,43 +118,95 @@ export function ReportsScreen() {
           const categories = Object.keys(childQuiz);
           const todayKey = getDateKey(0);
           const todayMs = childAnalytics[todayKey]?.totalMs ?? 0;
+          const weeklyEntries = last7Days.map((key) => ({
+            key,
+            ms: childAnalytics[key]?.totalMs ?? 0,
+          }));
+          const weekMs = weeklyEntries.reduce((sum, entry) => sum + entry.ms, 0);
+          const isExpanded = expandedById[child.id] ?? false;
+          const toggleExpanded = () =>
+            setExpandedById((prev) => ({ ...prev, [child.id]: !isExpanded }));
 
           return (
             <View key={child.id} style={styles.card}>
-              <Text style={styles.cardTitle}>{child.name}</Text>
-              <Text style={styles.cardMeta}>
-                Age: {child.age || 'N/A'} • {child.disabilityType}
-              </Text>
-              <Text style={styles.timeRow}>Today: {formatDuration(todayMs)}</Text>
-              <Text style={styles.timeRow}>
-                Last 7 days:{' '}
-                {last7Days
-                  .map((key) => {
-                    const ms = childAnalytics[key]?.totalMs ?? 0;
-                    return ms ? formatDuration(ms) : '0 min';
-                  })
-                  .join(' • ')}
-              </Text>
-              <Text style={styles.points}>Points: {points}</Text>
-              {categories.length === 0 ? (
-                <Text style={styles.subtitle}>No quiz results yet.</Text>
-              ) : (
-                categories.map((category) => {
-                  const result = childQuiz[category];
-                  const perfect = Boolean(badges?.[category]);
-                  return (
-                    <Text key={category} style={styles.resultRow}>
-                      {category}: {result.score}/{result.total}{' '}
-                      {perfect ? '• Perfect badge' : ''}
-                    </Text>
-                  );
-                })
-              )}
+              <View style={styles.cardHeader}>
+                <View>
+                  <Text style={styles.cardTitle}>{child.name}</Text>
+                  <Text style={styles.cardMeta}>
+                    Age: {child.age || 'N/A'} • {child.disabilityType}
+                  </Text>
+                </View>
+                <Text style={styles.pointsBadge}>{points} pts</Text>
+              </View>
+
+              <View style={styles.summaryRow}>
+                <View style={styles.summaryPill}>
+                  <Text style={styles.summaryLabel}>Today</Text>
+                  <Text style={styles.summaryValue}>{formatDuration(todayMs)}</Text>
+                </View>
+                <View style={[styles.summaryPill, styles.summaryPillLast]}>
+                  <Text style={styles.summaryLabel}>Last 7 days</Text>
+                  <Text style={styles.summaryValue}>{formatDuration(weekMs)}</Text>
+                </View>
+              </View>
+
+              <TouchableOpacity
+                style={styles.toggleRow}
+                onPress={toggleExpanded}
+                accessibilityRole="button"
+                accessibilityLabel={isExpanded ? 'Hide details' : 'Show details'}
+              >
+                <Text style={styles.toggleText}>{isExpanded ? 'Hide details' : 'Show details'}</Text>
+              </TouchableOpacity>
+
+              {isExpanded ? (
+                <>
+                  <View style={styles.sectionBlock}>
+                    <Text style={styles.sectionTitle}>Weekly learning</Text>
+                    <View style={styles.weekRow}>
+                      {weeklyEntries.map((entry) => {
+                        const date = new Date(entry.key);
+                        const day = date.toLocaleDateString('en-US', { weekday: 'short' });
+                        const mins = Math.round(entry.ms / 60000);
+                        return (
+                          <View key={entry.key} style={styles.weekPill}>
+                            <Text style={styles.weekDay}>{day}</Text>
+                            <Text style={styles.weekValue}>{mins}m</Text>
+                          </View>
+                        );
+                      })}
+                    </View>
+                    {weekMs === 0 ? (
+                      <Text style={styles.subtitle}>No learning time recorded yet.</Text>
+                    ) : null}
+                  </View>
+
+                  <View style={styles.sectionBlock}>
+                    <Text style={styles.sectionTitle}>Quiz results</Text>
+                    {categories.length === 0 ? (
+                      <Text style={styles.subtitle}>No quiz results yet.</Text>
+                    ) : (
+                      categories.map((category) => {
+                        const result = childQuiz[category];
+                        const perfect = Boolean(badges?.[category]);
+                        return (
+                          <View key={category} style={styles.resultRow}>
+                            <Text style={styles.resultLabel}>{category}</Text>
+                            <Text style={styles.resultValue}>
+                              {result.score}/{result.total} {perfect ? '• Perfect badge' : ''}
+                            </Text>
+                          </View>
+                        );
+                      })
+                    )}
+                  </View>
+                </>
+              ) : null}
             </View>
           );
         })
       )}
-    </View>
+    </ScrollView>
   );
 }
 
@@ -154,6 +214,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
+  },
+  content: {
     padding: theme.spacing.xl,
   },
   title: {
@@ -174,6 +236,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border,
     marginBottom: theme.spacing.lg,
+    shadowColor: theme.colors.text,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    elevation: 2,
   },
   infoTitle: {
     fontSize: theme.fontSizes.md,
@@ -187,11 +254,22 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: theme.colors.surface,
-    borderRadius: 12,
+    borderRadius: 16,
     padding: theme.spacing.lg,
     marginBottom: theme.spacing.md,
     borderWidth: 1,
     borderColor: theme.colors.border,
+    shadowColor: theme.colors.text,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
+    elevation: 3,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: theme.spacing.md,
   },
   cardTitle: {
     fontSize: theme.fontSizes.lg,
@@ -204,18 +282,109 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
     marginBottom: theme.spacing.sm,
   },
+  pointsBadge: {
+    backgroundColor: theme.colors.primary,
+    color: theme.colors.onPrimary,
+    fontSize: theme.fontSizes.sm,
+    fontWeight: theme.fontWeights.semibold,
+    paddingVertical: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.sm,
+    borderRadius: 999,
+    overflow: 'hidden',
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    marginBottom: theme.spacing.sm,
+  },
+  summaryPill: {
+    flex: 1,
+    backgroundColor: theme.colors.surface,
+    borderRadius: 12,
+    padding: theme.spacing.sm,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    marginRight: theme.spacing.sm,
+  },
+  summaryPillLast: {
+    marginRight: 0,
+  },
+  summaryLabel: {
+    fontSize: theme.fontSizes.xs,
+    color: theme.colors.textSecondary,
+    marginBottom: theme.spacing.xs,
+  },
+  summaryValue: {
+    fontSize: theme.fontSizes.md,
+    color: theme.colors.text,
+    fontWeight: theme.fontWeights.semibold,
+  },
+  toggleRow: {
+    alignItems: 'center',
+    paddingVertical: theme.spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+  },
+  toggleText: {
+    fontSize: theme.fontSizes.sm,
+    color: theme.colors.primary,
+    fontWeight: theme.fontWeights.semibold,
+  },
+  sectionBlock: {
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
+    paddingTop: theme.spacing.sm,
+    marginTop: theme.spacing.sm,
+  },
+  weekRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: theme.spacing.sm,
+  },
+  weekPill: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: 12,
+    paddingVertical: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.sm,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    marginRight: theme.spacing.xs,
+    marginBottom: theme.spacing.xs,
+    minWidth: 54,
+    alignItems: 'center',
+  },
+  weekDay: {
+    fontSize: theme.fontSizes.xs,
+    color: theme.colors.textSecondary,
+  },
+  weekValue: {
+    fontSize: theme.fontSizes.sm,
+    color: theme.colors.text,
+    fontWeight: theme.fontWeights.semibold,
+  },
+  sectionTitle: {
+    fontSize: theme.fontSizes.md,
+    fontWeight: theme.fontWeights.semibold,
+    color: theme.colors.text,
+    marginBottom: theme.spacing.xs,
+  },
   timeRow: {
     fontSize: theme.fontSizes.sm,
     color: theme.colors.textSecondary,
     marginBottom: theme.spacing.xs,
   },
-  points: {
-    fontSize: theme.fontSizes.md,
-    color: theme.colors.primary,
-    fontWeight: theme.fontWeights.semibold,
-    marginBottom: theme.spacing.sm,
-  },
   resultRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: theme.spacing.xs,
+  },
+  resultLabel: {
+    fontSize: theme.fontSizes.sm,
+    color: theme.colors.text,
+  },
+  resultValue: {
     fontSize: theme.fontSizes.sm,
     color: theme.colors.textSecondary,
   },

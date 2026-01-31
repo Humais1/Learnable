@@ -2,12 +2,30 @@ import { Audio } from 'expo-av';
 import { File } from 'expo-file-system';
 import { Platform } from 'react-native';
 
-const normalize = (text: string) =>
-  text
+const normalize = (text: string) => {
+  const cleaned = text
     .toLowerCase()
     .replace(/[^a-z0-9\s]/g, '')
     .replace(/\s+/g, ' ')
     .trim();
+
+  // Normalize numbers so "one" and "1" match.
+  const numberMap: Array<[RegExp, string]> = [
+    [/\bzero\b|\b0\b/g, '0'],
+    [/\bone\b|\b1\b/g, '1'],
+    [/\btwo\b|\b2\b/g, '2'],
+    [/\bthree\b|\b3\b/g, '3'],
+    [/\bfour\b|\b4\b/g, '4'],
+    [/\bfive\b|\b5\b/g, '5'],
+    [/\bsix\b|\b6\b/g, '6'],
+    [/\bseven\b|\b7\b/g, '7'],
+    [/\beight\b|\b8\b/g, '8'],
+    [/\bnine\b|\b9\b/g, '9'],
+    [/\bten\b|\b10\b/g, '10'],
+  ];
+
+  return numberMap.reduce((acc, [regex, value]) => acc.replace(regex, value), cleaned);
+};
 
 export const scorePronunciation = (expected: string, transcript: string) => {
   const exp = normalize(expected);

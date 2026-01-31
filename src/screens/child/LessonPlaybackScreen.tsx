@@ -20,13 +20,14 @@ export function LessonPlaybackScreen() {
   const route = useRoute<Route>();
   const navigation = useNavigation<Nav>();
   const { selectedChild } = useChild();
-  const { speak } = useTTS();
+  const { speak, stop: stopTts } = useTTS();
   const category = route.params?.category as LessonCategory;
   const lessonId = route.params?.lessonId;
   const lesson = LESSONS[category]?.find((l) => l.id === lessonId);
   const [saving, setSaving] = useState(false);
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
   const [checking, setChecking] = useState(false);
+  const [starting, setStarting] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [result, setResult] = useState<'correct' | 'try_again' | null>(null);
   const sessionRef = useRef<{ sessionId: string; startedAt: number } | null>(null);
@@ -90,16 +91,40 @@ export function LessonPlaybackScreen() {
   };
 
   const handleStartPronounce = async () => {
-    if (recording) return;
+    if (recording || checking || starting) return;
     try {
-      const rec = await startRecording();
-      setRecording(rec);
+      stopTts();
       setResult(null);
       setTranscript('');
-      speak('Start speaking now.');
+      setStarting(true);
+      speak('Start speaking now.', {
+        onDone: async () => {
+          try {
+            const rec = await startRecording();
+            setRecording(rec);
+          } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : 'Recording failed.';
+            Alert.alert('Recording failed', msg);
+          } finally {
+            setStarting(false);
+          }
+        },
+        onError: async () => {
+          try {
+            const rec = await startRecording();
+            setRecording(rec);
+          } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : 'Recording failed.';
+            Alert.alert('Recording failed', msg);
+          } finally {
+            setStarting(false);
+          }
+        },
+      });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Recording failed.';
       Alert.alert('Recording failed', msg);
+      setStarting(false);
     }
   };
 
@@ -170,19 +195,19 @@ export function LessonPlaybackScreen() {
       <TouchableOpacity
         style={styles.secondaryButton}
         onPress={handleStartPronounce}
-        disabled={Boolean(recording) || checking}
+        disabled={Boolean(recording) || checking || starting}
         accessibilityLabel="Start pronunciation"
         accessibilityRole="button"
       >
         <Text style={styles.secondaryButtonText}>
-          {recording ? 'Recording…' : 'Start pronunciation'}
+          {recording ? 'Recording…' : starting ? 'Preparing…' : 'Start pronunciation'}
         </Text>
       </TouchableOpacity>
 
       <TouchableOpacity
         style={styles.secondaryButton}
         onPress={handleStopPronounce}
-        disabled={!recording || checking}
+        disabled={!recording || checking || starting}
         accessibilityLabel="Stop and check pronunciation"
         accessibilityRole="button"
       >
