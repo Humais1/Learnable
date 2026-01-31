@@ -12,6 +12,8 @@ import { markLessonCompleted } from '../../services/progress';
 import { endSession, startSession } from '../../services/analytics';
 import { useTTS } from '../../hooks/useTTS';
 import { scorePronunciation, startRecording, stopRecording, transcribeWithGoogle } from '../../services/speech';
+import { useVoiceCommands } from '../../hooks/useVoiceCommands';
+import { VoiceControlBar } from '../../components/VoiceControlBar';
 
 type Route = RouteProp<ChildStackParamList, 'LessonPlayback'>;
 type Nav = NativeStackNavigationProp<ChildStackParamList, 'LessonPlayback'>;
@@ -36,6 +38,7 @@ export function LessonPlaybackScreen() {
   useScreenAnnounce(
     lesson ? `Lesson. ${lesson.title}. ${lesson.prompt}` : 'Lesson playback.'
   );
+
 
   useEffect(() => {
     const begin = async () => {
@@ -161,6 +164,15 @@ export function LessonPlaybackScreen() {
     }
   };
 
+  const voice = useVoiceCommands({
+    enabled: !recording && !checking && !starting,
+    commands: [
+      { phrases: ['repeat', 'listen'], action: handleListen },
+      { phrases: ['mark completed', 'complete lesson', 'done'], action: handleComplete },
+      { phrases: ['go back', 'back'], action: () => navigation.goBack() },
+    ],
+  });
+
   if (!lesson || !selectedChild) {
     return (
       <View style={styles.container}>
@@ -241,6 +253,15 @@ export function LessonPlaybackScreen() {
           <Text style={styles.primaryButtonText}>Mark completed</Text>
         )}
       </TouchableOpacity>
+
+      <VoiceControlBar
+        listening={voice.listening}
+        processing={voice.processing}
+        lastTranscript={voice.lastTranscript}
+        onToggle={voice.toggleListening}
+        disabled={recording || checking || starting}
+        hint="Try: repeat, mark completed, go back."
+      />
     </View>
   );
 }

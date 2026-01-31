@@ -1,11 +1,13 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ParentStackParamList } from '../../navigation/types';
 import { theme } from '../../theme';
 import { useScreenAnnounce } from '../../hooks/useScreenAnnounce';
 import { useAuth } from '../../contexts/AuthContext';
+import { useVoiceCommands } from '../../hooks/useVoiceCommands';
+import { VoiceControlBar } from '../../components/VoiceControlBar';
 
 type Nav = NativeStackNavigationProp<ParentStackParamList, 'ParentHome'>;
 
@@ -13,6 +15,24 @@ export function ParentHomeScreen() {
   useScreenAnnounce('Parent home. Dashboard and child profiles.');
   const navigation = useNavigation<Nav>();
   const { user, logout } = useAuth();
+  const confirmLogout = () => {
+    Alert.alert('Log out', 'Are you sure you want to log out?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Log out', style: 'destructive', onPress: () => logout() },
+    ]);
+  };
+  const voice = useVoiceCommands({
+    commands: [
+      { phrases: ['open dashboard', 'dashboard'], action: () => navigation.navigate('Dashboard') },
+      { phrases: ['open reports', 'reports'], action: () => navigation.navigate('Reports') },
+      {
+        phrases: ['manage children', 'child profiles', 'children'],
+        action: () => navigation.navigate('ChildProfiles'),
+      },
+      { phrases: ['log out', 'logout', 'sign out'], action: () => confirmLogout() },
+      { phrases: ['go back', 'back'], action: () => navigation.goBack() },
+    ],
+  });
 
   return (
     <View style={styles.container}>
@@ -55,12 +75,20 @@ export function ParentHomeScreen() {
 
       <TouchableOpacity
         style={styles.logoutButton}
-        onPress={() => logout()}
+        onPress={confirmLogout}
         accessibilityLabel="Log out"
         accessibilityRole="button"
       >
         <Text style={styles.logoutText}>Log out</Text>
       </TouchableOpacity>
+
+      <VoiceControlBar
+        listening={voice.listening}
+        processing={voice.processing}
+        lastTranscript={voice.lastTranscript}
+        onToggle={voice.toggleListening}
+        hint="Try: open dashboard, open reports, manage children."
+      />
     </View>
   );
 }

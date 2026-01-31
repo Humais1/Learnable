@@ -16,6 +16,8 @@ import { useScreenAnnounce } from '../../hooks/useScreenAnnounce';
 import { useChild } from '../../contexts/ChildContext';
 import { LESSONS, type LessonCategory } from '../../data/lessons';
 import { subscribeToLessonProgress, type LessonProgress } from '../../services/progress';
+import { useVoiceCommands } from '../../hooks/useVoiceCommands';
+import { VoiceControlBar } from '../../components/VoiceControlBar';
 
 type Route = RouteProp<ChildStackParamList, 'LessonList'>;
 type Nav = NativeStackNavigationProp<ChildStackParamList, 'LessonList'>;
@@ -30,6 +32,30 @@ export function LessonListScreen() {
   const [progress, setProgress] = useState<Record<string, LessonProgress>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const lessonCommands = lessons.map((lesson) => ({
+    phrases: [`open ${lesson.title.toLowerCase()}`, lesson.title.toLowerCase()],
+    action: () =>
+      navigation.navigate('LessonPlayback', {
+        lessonId: lesson.id,
+        category,
+      }),
+  }));
+
+  const voice = useVoiceCommands({
+    commands: [
+      { phrases: ['start quiz', 'open quiz'], action: () => category && navigation.navigate('Quiz', { category }) },
+      {
+        phrases: ['start lesson', 'open lesson'],
+        action: () =>
+          lessons[0]
+            ? navigation.navigate('LessonPlayback', { lessonId: lessons[0].id, category })
+            : undefined,
+      },
+      ...lessonCommands,
+      { phrases: ['go back', 'back'], action: () => navigation.goBack() },
+    ],
+  });
 
   useEffect(() => {
     if (!selectedChild?.id || !category) {
@@ -121,6 +147,15 @@ export function LessonListScreen() {
               </TouchableOpacity>
             );
           }}
+          ListFooterComponent={
+            <VoiceControlBar
+              listening={voice.listening}
+              processing={voice.processing}
+              lastTranscript={voice.lastTranscript}
+              onToggle={voice.toggleListening}
+              hint="Try: start quiz, open lesson one, go back."
+            />
+          }
         />
         </>
       )}

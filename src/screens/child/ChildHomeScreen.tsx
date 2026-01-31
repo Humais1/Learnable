@@ -19,6 +19,8 @@ import { useChild } from '../../contexts/ChildContext';
 import { subscribeToChildren, type ChildProfile } from '../../services/children';
 import { LESSON_CATEGORIES, LESSONS } from '../../data/lessons';
 import { subscribeToLessonProgress, type LessonProgress } from '../../services/progress';
+import { useVoiceCommands } from '../../hooks/useVoiceCommands';
+import { VoiceControlBar } from '../../components/VoiceControlBar';
 
 type Nav = NativeStackNavigationProp<ChildStackParamList, 'ChildHome'>;
 
@@ -40,6 +42,27 @@ export function ChildHomeScreen() {
       ? `Learn. ${selectedChild.name} can learn letters, numbers, birds, or animals.`
       : 'Choose a child to start learning.'
   );
+
+  const categoryCommands = LESSON_CATEGORIES.map((category) => ({
+    phrases: [`open ${category.label.toLowerCase()}`, category.label.toLowerCase()],
+    action: () => navigation.navigate('LessonList', { category: category.id }),
+  }));
+
+  const childSelectCommands = children.map((child) => ({
+    phrases: [`select ${child.name.toLowerCase()}`, child.name.toLowerCase()],
+    action: () => selectChild(child),
+  }));
+
+  const commonCommands = [
+    { phrases: ['change child'], action: () => clearChild() },
+    { phrases: ['go back', 'back'], action: () => navigation.goBack() },
+  ];
+
+  const voice = useVoiceCommands({
+    commands: selectedChild
+      ? [...categoryCommands, ...commonCommands]
+      : [...childSelectCommands, ...commonCommands],
+  });
 
   useEffect(() => {
     if (!user?.uid || selectedChild) {
@@ -143,6 +166,15 @@ export function ChildHomeScreen() {
           ListEmptyComponent={
             <Text style={styles.subtitle}>No child profiles yet. Add one in Parent.</Text>
           }
+          ListFooterComponent={
+            <VoiceControlBar
+              listening={voice.listening}
+              processing={voice.processing}
+              lastTranscript={voice.lastTranscript}
+              onToggle={voice.toggleListening}
+              hint="Try: select [child name], go back."
+            />
+          }
         />
       </View>
     );
@@ -195,6 +227,14 @@ export function ChildHomeScreen() {
           );
         })()
       ))}
+
+      <VoiceControlBar
+        listening={voice.listening}
+        processing={voice.processing}
+        lastTranscript={voice.lastTranscript}
+        onToggle={voice.toggleListening}
+        hint="Try: open letters, open numbers, change child."
+      />
     </View>
   );
 }

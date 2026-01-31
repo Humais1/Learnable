@@ -21,6 +21,8 @@ import {
 } from '../../services/progress';
 import { subscribeToDailyAnalytics, type DailyAnalytics } from '../../services/analytics';
 import type { ParentStackParamList } from '../../navigation/types';
+import { useVoiceCommands } from '../../hooks/useVoiceCommands';
+import { VoiceControlBar } from '../../components/VoiceControlBar';
 
 type Nav = NativeStackNavigationProp<ParentStackParamList, 'Dashboard'>;
 
@@ -28,6 +30,16 @@ export function DashboardScreen() {
   useScreenAnnounce('Dashboard. Overview of learning time, points, and quizzes.');
   const navigation = useNavigation<Nav>();
   const { user } = useAuth();
+  const voice = useVoiceCommands({
+    commands: [
+      { phrases: ['open reports', 'reports'], action: () => navigation.navigate('Reports') },
+      {
+        phrases: ['manage children', 'child profiles', 'children'],
+        action: () => navigation.navigate('ChildProfiles'),
+      },
+      { phrases: ['go back', 'back'], action: () => navigation.goBack() },
+    ],
+  });
   const [children, setChildren] = useState<ChildProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [quizResults, setQuizResults] = useState<Record<string, QuizResultsMap>>({});
@@ -236,6 +248,14 @@ export function DashboardScreen() {
           </View>
         ))
       )}
+
+      <VoiceControlBar
+        listening={voice.listening}
+        processing={voice.processing}
+        lastTranscript={voice.lastTranscript}
+        onToggle={voice.toggleListening}
+        hint="Try: open reports, manage children, go back."
+      />
     </ScrollView>
   );
 }

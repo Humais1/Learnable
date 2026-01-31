@@ -21,6 +21,8 @@ import { addPoints, awardPerfectQuiz, saveQuizResult } from '../../services/prog
 import { playCorrectSound, playWrongSound } from '../../utils/audioFeedback';
 import * as Haptics from 'expo-haptics';
 import { endSession, startSession } from '../../services/analytics';
+import { useVoiceCommands } from '../../hooks/useVoiceCommands';
+import { VoiceControlBar } from '../../components/VoiceControlBar';
 
 type Route = RouteProp<ChildStackParamList, 'Quiz'>;
 type Nav = NativeStackNavigationProp<ChildStackParamList, 'Quiz'>;
@@ -62,12 +64,36 @@ export function QuizScreen() {
   const total = questions.length;
   const isLast = index === total - 1;
 
-  useEffect(() => {
+  const repeatQuestion = () => {
     if (!question) return;
     const optionsText = question.options
       .map((opt, i) => `Option ${i + 1}. ${opt}`)
       .join('. ');
     speak(`${question.prompt}. ${optionsText}`);
+  };
+
+  const selectOption = (idx: number) => {
+    if (!question || idx < 0 || idx >= question.options.length) return;
+    const option = question.options[idx];
+    speak(option);
+    setSelected(idx);
+  };
+
+  const voice = useVoiceCommands({
+    commands: [
+      { phrases: ['repeat', 'repeat question'], action: repeatQuestion },
+      { phrases: ['option one', 'option 1'], action: () => selectOption(0) },
+      { phrases: ['option two', 'option 2'], action: () => selectOption(1) },
+      { phrases: ['option three', 'option 3'], action: () => selectOption(2) },
+      { phrases: ['option four', 'option 4'], action: () => selectOption(3) },
+      { phrases: ['next', 'finish'], action: () => handleNext() },
+      { phrases: ['go back', 'back'], action: () => navigation.goBack() },
+    ],
+  });
+
+  useEffect(() => {
+    if (!question) return;
+    repeatQuestion();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index, question?.id]);
 
@@ -208,17 +234,21 @@ export function QuizScreen() {
       <TouchableOpacity
         style={styles.secondaryButton}
         onPress={() => {
-          if (!question) return;
-          const optionsText = question.options
-            .map((opt, i) => `Option ${i + 1}. ${opt}`)
-            .join('. ');
-          speak(`${question.prompt}. ${optionsText}`);
+          repeatQuestion();
         }}
         accessibilityLabel="Repeat question"
         accessibilityRole="button"
       >
         <Text style={styles.secondaryButtonText}>Repeat question</Text>
       </TouchableOpacity>
+
+      <VoiceControlBar
+        listening={voice.listening}
+        processing={voice.processing}
+        lastTranscript={voice.lastTranscript}
+        onToggle={voice.toggleListening}
+        hint="Try: option one, option two, repeat, next."
+      />
     </View>
   );
 }

@@ -7,6 +7,8 @@ import {
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { theme } from '../../theme';
 import { useScreenAnnounce } from '../../hooks/useScreenAnnounce';
 import { useAuth } from '../../contexts/AuthContext';
@@ -18,9 +20,13 @@ import {
   type QuizResultsMap,
 } from '../../services/progress';
 import { subscribeToDailyAnalytics, type DailyAnalytics } from '../../services/analytics';
+import type { ParentStackParamList } from '../../navigation/types';
+import { useVoiceCommands } from '../../hooks/useVoiceCommands';
+import { VoiceControlBar } from '../../components/VoiceControlBar';
 
 export function ReportsScreen() {
   useScreenAnnounce('Reports. Learning time and quiz scores by date.');
+  const navigation = useNavigation<NativeStackNavigationProp<ParentStackParamList, 'Reports'>>();
   const { user } = useAuth();
   const [children, setChildren] = useState<ChildProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,6 +34,9 @@ export function ReportsScreen() {
   const [achievements, setAchievements] = useState<Record<string, AchievementsSnapshot>>({});
   const [analytics, setAnalytics] = useState<Record<string, Record<string, DailyAnalytics>>>({});
   const [expandedById, setExpandedById] = useState<Record<string, boolean>>({});
+  const voice = useVoiceCommands({
+    commands: [{ phrases: ['go back', 'back'], action: () => navigation.goBack() }],
+  });
 
   useEffect(() => {
     if (!user?.uid) {
@@ -206,6 +215,14 @@ export function ReportsScreen() {
           );
         })
       )}
+
+      <VoiceControlBar
+        listening={voice.listening}
+        processing={voice.processing}
+        lastTranscript={voice.lastTranscript}
+        onToggle={voice.toggleListening}
+        hint="Try: go back."
+      />
     </ScrollView>
   );
 }
