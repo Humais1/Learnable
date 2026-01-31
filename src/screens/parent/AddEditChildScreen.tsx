@@ -14,7 +14,6 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import type { ParentStackParamList } from '../../navigation/types';
 import { theme } from '../../theme';
-import { useScreenAnnounce } from '../../hooks/useScreenAnnounce';
 import { useAuth } from '../../contexts/AuthContext';
 import { createChild, getChild, updateChild } from '../../services/children';
 
@@ -30,7 +29,6 @@ const DISABILITY_OPTIONS = [
 ];
 
 export function AddEditChildScreen() {
-  useScreenAnnounce('Add or edit child. Enter name, age, and level.');
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
   const { user } = useAuth();

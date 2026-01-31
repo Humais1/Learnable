@@ -14,8 +14,6 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { AuthStackParamList } from '../../navigation/types';
 import { theme } from '../../theme';
-import { useScreenAnnounce } from '../../hooks/useScreenAnnounce';
-import { useTTS } from '../../hooks/useTTS';
 import { useAuth } from '../../contexts/AuthContext';
 
 type Nav = NativeStackNavigationProp<AuthStackParamList, 'Login'>;
@@ -23,8 +21,6 @@ type Nav = NativeStackNavigationProp<AuthStackParamList, 'Login'>;
 const MIN_TOUCH = theme.spacing.minTouchTarget;
 
 export function LoginScreen() {
-  useScreenAnnounce('Login. Sign in to your parent account.');
-  const { speak } = useTTS();
   const navigation = useNavigation<Nav>();
   const { login } = useAuth();
   const [email, setEmail] = useState('');
@@ -40,8 +36,18 @@ export function LoginScreen() {
     try {
       await login(email.trim(), password);
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : 'Login failed.';
-      Alert.alert('Login failed', msg);
+      const err = e as { code?: string; message?: string };
+      if (
+        err?.code === 'auth/user-not-found' ||
+        err?.code === 'auth/wrong-password' ||
+        err?.code === 'auth/invalid-credential' ||
+        err?.code === 'auth/invalid-login-credentials'
+      ) {
+        Alert.alert('Login failed', 'Incorrect username or password.');
+      } else {
+        const msg = e instanceof Error ? e.message : 'Login failed.';
+        Alert.alert('Login failed', msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -79,7 +85,6 @@ export function LoginScreen() {
 
       <TouchableOpacity
         style={[styles.button, loading && styles.buttonDisabled]}
-        onPressIn={() => !loading && speak('Sign in')}
         onPress={handleLogin}
         disabled={loading}
         accessibilityLabel="Sign in"
@@ -94,7 +99,6 @@ export function LoginScreen() {
 
       <TouchableOpacity
         style={styles.linkButton}
-        onPressIn={() => speak('Forgot password')}
         onPress={() => navigation.navigate('ForgotPassword')}
         accessibilityLabel="Forgot password"
         accessibilityRole="button"
@@ -104,7 +108,6 @@ export function LoginScreen() {
 
       <TouchableOpacity
         style={styles.linkButton}
-        onPressIn={() => speak('Create account')}
         onPress={() => navigation.navigate('Register')}
         accessibilityLabel="Create account"
         accessibilityRole="button"

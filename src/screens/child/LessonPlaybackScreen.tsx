@@ -168,7 +168,14 @@ export function LessonPlaybackScreen() {
     enabled: !recording && !checking && !starting,
     commands: [
       { phrases: ['repeat', 'listen'], action: handleListen },
+      { phrases: ['start pronunciation', 'start speaking'], action: handleStartPronounce },
+      { phrases: ['stop check', 'stop and check'], action: handleStopPronounce },
       { phrases: ['mark completed', 'complete lesson', 'done'], action: handleComplete },
+      {
+        phrases: ['help', 'commands', 'what can i say'],
+        action: () =>
+          speak('You can say: repeat, start pronunciation, stop check, mark completed, or go back.'),
+      },
       { phrases: ['go back', 'back'], action: () => navigation.goBack() },
     ],
   });
@@ -259,7 +266,7 @@ export function LessonPlaybackScreen() {
         processing={voice.processing}
         lastTranscript={voice.lastTranscript}
         onToggle={voice.toggleListening}
-        disabled={recording || checking || starting}
+        disabled={Boolean(recording) || checking || starting}
         hint="Try: repeat, mark completed, go back."
       />
     </View>

@@ -10,7 +10,6 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { theme } from '../../theme';
-import { useScreenAnnounce } from '../../hooks/useScreenAnnounce';
 import { useAuth } from '../../contexts/AuthContext';
 import { subscribeToChildren, type ChildProfile } from '../../services/children';
 import {
@@ -27,12 +26,12 @@ import { VoiceControlBar } from '../../components/VoiceControlBar';
 type Nav = NativeStackNavigationProp<ParentStackParamList, 'Dashboard'>;
 
 export function DashboardScreen() {
-  useScreenAnnounce('Dashboard. Overview of learning time, points, and quizzes.');
   const navigation = useNavigation<Nav>();
   const { user } = useAuth();
   const voice = useVoiceCommands({
     commands: [
       { phrases: ['open reports', 'reports'], action: () => navigation.navigate('Reports') },
+      { phrases: ['open settings', 'settings'], action: () => navigation.navigate('Settings') },
       {
         phrases: ['manage children', 'child profiles', 'children'],
         action: () => navigation.navigate('ChildProfiles'),
@@ -192,6 +191,14 @@ export function DashboardScreen() {
           >
             <Text style={styles.secondaryButtonText}>View reports</Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.secondaryButton}
+            onPress={() => navigation.navigate('Settings')}
+            accessibilityLabel="Open settings"
+            accessibilityRole="button"
+          >
+            <Text style={styles.secondaryButtonText}>Settings</Text>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -254,7 +261,7 @@ export function DashboardScreen() {
         processing={voice.processing}
         lastTranscript={voice.lastTranscript}
         onToggle={voice.toggleListening}
-        hint="Try: open reports, manage children, go back."
+        hint="Try: open reports, settings, manage children, go back."
       />
     </ScrollView>
   );

@@ -21,6 +21,7 @@ import { LESSON_CATEGORIES, LESSONS } from '../../data/lessons';
 import { subscribeToLessonProgress, type LessonProgress } from '../../services/progress';
 import { useVoiceCommands } from '../../hooks/useVoiceCommands';
 import { VoiceControlBar } from '../../components/VoiceControlBar';
+import { useTTS } from '../../hooks/useTTS';
 
 type Nav = NativeStackNavigationProp<ChildStackParamList, 'ChildHome'>;
 
@@ -28,6 +29,7 @@ export function ChildHomeScreen() {
   const { user } = useAuth();
   const { selectedChild, selectChild, clearChild, loading: childLoading } = useChild();
   const navigation = useNavigation<Nav>();
+  const { speak } = useTTS();
   const [children, setChildren] = useState<ChildProfile[]>([]);
   const [loadingChildren, setLoadingChildren] = useState(true);
   const [progressByCategory, setProgressByCategory] = useState<
@@ -60,8 +62,26 @@ export function ChildHomeScreen() {
 
   const voice = useVoiceCommands({
     commands: selectedChild
-      ? [...categoryCommands, ...commonCommands]
-      : [...childSelectCommands, ...commonCommands],
+      ? [
+          ...categoryCommands,
+          ...commonCommands,
+          {
+            phrases: ['help', 'commands', 'what can i say'],
+            action: () =>
+              speak(
+                'You can say: open letters, open numbers, open birds, open animals, change child, or go back.'
+              ),
+          },
+        ]
+      : [
+          ...childSelectCommands,
+          ...commonCommands,
+          {
+            phrases: ['help', 'commands', 'what can i say'],
+            action: () =>
+              speak('You can say: select a child by name, or go back.'),
+          },
+        ],
   });
 
   useEffect(() => {

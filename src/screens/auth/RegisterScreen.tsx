@@ -14,8 +14,6 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { AuthStackParamList } from '../../navigation/types';
 import { theme } from '../../theme';
-import { useScreenAnnounce } from '../../hooks/useScreenAnnounce';
-import { useTTS } from '../../hooks/useTTS';
 import { useAuth } from '../../contexts/AuthContext';
 
 type Nav = NativeStackNavigationProp<AuthStackParamList, 'Register'>;
@@ -23,8 +21,6 @@ type Nav = NativeStackNavigationProp<AuthStackParamList, 'Register'>;
 const MIN_TOUCH = theme.spacing.minTouchTarget;
 
 export function RegisterScreen() {
-  useScreenAnnounce('Register. Create a new parent account.');
-  const { speak } = useTTS();
   const navigation = useNavigation<Nav>();
   const { register } = useAuth();
   const [name, setName] = useState('');
@@ -45,8 +41,17 @@ export function RegisterScreen() {
     try {
       await register(email.trim(), password, name.trim());
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : 'Registration failed.';
-      Alert.alert('Registration failed', msg);
+      const err = e as { code?: string; message?: string };
+      if (err?.code === 'auth/email-already-in-use') {
+        Alert.alert('Registration failed', 'This email is already in use.');
+      } else if (err?.code === 'auth/invalid-email') {
+        Alert.alert('Registration failed', 'Please enter a valid email address.');
+      } else if (err?.code === 'auth/weak-password') {
+        Alert.alert('Registration failed', 'Password is too weak. Use at least 6 characters.');
+      } else {
+        const msg = e instanceof Error ? e.message : 'Registration failed.';
+        Alert.alert('Registration failed', msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -93,7 +98,6 @@ export function RegisterScreen() {
 
       <TouchableOpacity
         style={[styles.button, loading && styles.buttonDisabled]}
-        onPressIn={() => !loading && speak('Create account')}
         onPress={handleRegister}
         disabled={loading}
         accessibilityLabel="Create account"
@@ -108,7 +112,6 @@ export function RegisterScreen() {
 
       <TouchableOpacity
         style={styles.linkButton}
-        onPressIn={() => speak('Sign in')}
         onPress={() => navigation.navigate('Login')}
         accessibilityLabel="Back to login"
         accessibilityRole="button"

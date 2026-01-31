@@ -4,7 +4,6 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ParentStackParamList } from '../../navigation/types';
 import { theme } from '../../theme';
-import { useScreenAnnounce } from '../../hooks/useScreenAnnounce';
 import { useAuth } from '../../contexts/AuthContext';
 import { useVoiceCommands } from '../../hooks/useVoiceCommands';
 import { VoiceControlBar } from '../../components/VoiceControlBar';
@@ -12,7 +11,6 @@ import { VoiceControlBar } from '../../components/VoiceControlBar';
 type Nav = NativeStackNavigationProp<ParentStackParamList, 'ParentHome'>;
 
 export function ParentHomeScreen() {
-  useScreenAnnounce('Parent home. Dashboard and child profiles.');
   const navigation = useNavigation<Nav>();
   const { user, logout } = useAuth();
   const confirmLogout = () => {
@@ -25,6 +23,7 @@ export function ParentHomeScreen() {
     commands: [
       { phrases: ['open dashboard', 'dashboard'], action: () => navigation.navigate('Dashboard') },
       { phrases: ['open reports', 'reports'], action: () => navigation.navigate('Reports') },
+      { phrases: ['open settings', 'settings'], action: () => navigation.navigate('Settings') },
       {
         phrases: ['manage children', 'child profiles', 'children'],
         action: () => navigation.navigate('ChildProfiles'),
@@ -71,6 +70,14 @@ export function ParentHomeScreen() {
         >
           <Text style={styles.secondaryButtonText}>View reports</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.secondaryButton}
+          onPress={() => navigation.navigate('Settings')}
+          accessibilityLabel="Open settings"
+          accessibilityRole="button"
+        >
+          <Text style={styles.secondaryButtonText}>Settings</Text>
+        </TouchableOpacity>
       </View>
 
       <TouchableOpacity
@@ -87,7 +94,7 @@ export function ParentHomeScreen() {
         processing={voice.processing}
         lastTranscript={voice.lastTranscript}
         onToggle={voice.toggleListening}
-        hint="Try: open dashboard, open reports, manage children."
+        hint="Try: open dashboard, open reports, settings, manage children."
       />
     </View>
   );

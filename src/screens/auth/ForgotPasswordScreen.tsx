@@ -14,7 +14,6 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { AuthStackParamList } from '../../navigation/types';
 import { theme } from '../../theme';
-import { useScreenAnnounce } from '../../hooks/useScreenAnnounce';
 import { useAuth } from '../../contexts/AuthContext';
 
 type Nav = NativeStackNavigationProp<AuthStackParamList, 'ForgotPassword'>;
@@ -22,7 +21,6 @@ type Nav = NativeStackNavigationProp<AuthStackParamList, 'ForgotPassword'>;
 const MIN_TOUCH = theme.spacing.minTouchTarget;
 
 export function ForgotPasswordScreen() {
-  useScreenAnnounce('Forgot password. Enter your email to reset.');
   const navigation = useNavigation<Nav>();
   const { resetPassword } = useAuth();
   const [email, setEmail] = useState('');

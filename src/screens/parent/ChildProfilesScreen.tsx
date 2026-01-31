@@ -12,14 +12,12 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ParentStackParamList } from '../../navigation/types';
 import { theme } from '../../theme';
-import { useScreenAnnounce } from '../../hooks/useScreenAnnounce';
 import { useAuth } from '../../contexts/AuthContext';
 import { deleteChild, subscribeToChildren, type ChildProfile } from '../../services/children';
 
 type Nav = NativeStackNavigationProp<ParentStackParamList, 'ChildProfiles'>;
 
 export function ChildProfilesScreen() {
-  useScreenAnnounce('Child profiles. Add or edit your children.');
   const navigation = useNavigation<Nav>();
   const { user } = useAuth();
   const [children, setChildren] = useState<ChildProfile[]>([]);

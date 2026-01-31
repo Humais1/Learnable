@@ -15,6 +15,7 @@ export type AuthStackParamList = {
 export type MainTabsParamList = {
   ParentTab: undefined;
   ChildTab: undefined;
+  SettingsTab: undefined;
 };
 
 export type ParentStackParamList = {
@@ -23,6 +24,7 @@ export type ParentStackParamList = {
   AddEditChild: { childId?: string };
   Reports: undefined;
   Dashboard: undefined;
+  Settings: undefined;
 };
 
 export type ChildStackParamList = {

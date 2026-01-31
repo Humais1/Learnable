@@ -87,6 +87,11 @@ export function QuizScreen() {
       { phrases: ['option three', 'option 3'], action: () => selectOption(2) },
       { phrases: ['option four', 'option 4'], action: () => selectOption(3) },
       { phrases: ['next', 'finish'], action: () => handleNext() },
+      {
+        phrases: ['help', 'commands', 'what can i say'],
+        action: () =>
+          speak('You can say: option one, option two, option three, option four, repeat, or next.'),
+      },
       { phrases: ['go back', 'back'], action: () => navigation.goBack() },
     ],
   });

@@ -6,6 +6,7 @@ import { ChildProfilesScreen } from '../screens/parent/ChildProfilesScreen';
 import { AddEditChildScreen } from '../screens/parent/AddEditChildScreen';
 import { ReportsScreen } from '../screens/parent/ReportsScreen';
 import { DashboardScreen } from '../screens/parent/DashboardScreen';
+import { SettingsScreen } from '../screens/parent/SettingsScreen';
 
 const Stack = createNativeStackNavigator<ParentStackParamList>();
 
@@ -22,6 +23,7 @@ export function ParentNavigator() {
       <Stack.Screen name="ChildProfiles" component={ChildProfilesScreen} />
       <Stack.Screen name="AddEditChild" component={AddEditChildScreen} />
       <Stack.Screen name="Reports" component={ReportsScreen} />
+      <Stack.Screen name="Settings" component={SettingsScreen} />
     </Stack.Navigator>
   );
 }

@@ -18,6 +18,7 @@ import { LESSONS, type LessonCategory } from '../../data/lessons';
 import { subscribeToLessonProgress, type LessonProgress } from '../../services/progress';
 import { useVoiceCommands } from '../../hooks/useVoiceCommands';
 import { VoiceControlBar } from '../../components/VoiceControlBar';
+import { useTTS } from '../../hooks/useTTS';
 
 type Route = RouteProp<ChildStackParamList, 'LessonList'>;
 type Nav = NativeStackNavigationProp<ChildStackParamList, 'LessonList'>;
@@ -27,6 +28,7 @@ export function LessonListScreen() {
   const route = useRoute<Route>();
   const navigation = useNavigation<Nav>();
   const { selectedChild } = useChild();
+  const { speak } = useTTS();
   const category = route.params?.category as LessonCategory | undefined;
   const lessons = category ? LESSONS[category] ?? [] : [];
   const [progress, setProgress] = useState<Record<string, LessonProgress>>({});
@@ -53,6 +55,13 @@ export function LessonListScreen() {
             : undefined,
       },
       ...lessonCommands,
+      {
+        phrases: ['help', 'commands', 'what can i say'],
+        action: () =>
+          speak(
+            'You can say: start quiz, open lesson one, open lesson two, open lesson three, or go back.'
+          ),
+      },
       { phrases: ['go back', 'back'], action: () => navigation.goBack() },
     ],
   });

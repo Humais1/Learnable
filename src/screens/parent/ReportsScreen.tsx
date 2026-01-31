@@ -10,7 +10,6 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { theme } from '../../theme';
-import { useScreenAnnounce } from '../../hooks/useScreenAnnounce';
 import { useAuth } from '../../contexts/AuthContext';
 import { subscribeToChildren, type ChildProfile } from '../../services/children';
 import {
@@ -25,7 +24,6 @@ import { useVoiceCommands } from '../../hooks/useVoiceCommands';
 import { VoiceControlBar } from '../../components/VoiceControlBar';
 
 export function ReportsScreen() {
-  useScreenAnnounce('Reports. Learning time and quiz scores by date.');
   const navigation = useNavigation<NativeStackNavigationProp<ParentStackParamList, 'Reports'>>();
   const { user } = useAuth();
   const [children, setChildren] = useState<ChildProfile[]>([]);
